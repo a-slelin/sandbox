@@ -1,0 +1,70 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>a.slelin.work.sandbox</groupId>
+        <artifactId>voting</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>a.slelin.work.sandbox.voting</groupId>
+    <artifactId>client</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>Sandbox::Voting::Client</name>
+
+    <description>Spring Boot desktop client with Swing (FlatLaf) UI for the voting server</description>
+
+    <dependencies>
+
+        <!--Voting Common-->
+        <dependency>
+            <groupId>a.slelin.work.sandbox.voting</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
+        <!--Lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
+        <!--FlatLaf-->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+        </dependency>
+
+        <!--Spring Boot Rest Client-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+
+        <!--Spring Boot Jackson-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jackson</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+
+        <plugins>
+
+            <!--Spring Boot plugin-->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+        </plugins>
+
+        <finalName>Client</finalName>
+
+    </build>
+
+</project>

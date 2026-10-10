@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: Voting Server
+
+server:
+  port: 8080
+
+voting:
+  # Создавать демонстрационные голосования при старте
+  demo-data: true
