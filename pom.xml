@@ -1,0 +1,170 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>a.slelin.work</groupId>
+    <artifactId>sandbox</artifactId>
+    <version>${revision}</version>
+
+    <packaging>pom</packaging>
+
+    <name>Sandbox</name>
+
+    <description>Sandbox for various projects and experiments</description>
+
+    <url>https://github.com/a-slelin/sandbox</url>
+
+    <developers>
+
+        <developer>
+            <id>1</id>
+            <name>Alexander Slelin</name>
+            <roles>
+                <role>Maintainer</role>
+            </roles>
+            <url>https://github.com/a-slelin</url>
+            <email>a.slelin.work@mail.ru</email>
+        </developer>
+
+    </developers>
+
+    <repositories>
+
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+
+    </repositories>
+
+    <modules>
+    </modules>
+
+    <properties>
+
+        <revision>1.0</revision>
+
+        <lastCheckVersion>06.09.2026</lastCheckVersion>
+
+        <!--General-->
+        <encoding>UTF-8</encoding>
+        <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
+        <java.version>25</java.version>
+        <skipTests>false</skipTests>
+
+        <!--Plugins-->
+        <version.plugin.clean>3.5.0</version.plugin.clean>
+        <version.plugin.compile>3.15.0</version.plugin.compile>
+        <version.plugin.surefire>3.5.6</version.plugin.surefire>
+        <version.plugin.jar>3.5.1</version.plugin.jar>
+        <version.plugin.install>3.1.4</version.plugin.install>
+
+        <!--Libraries-->
+        <version.lombok>1.18.48</version.lombok>
+        <version.logback>1.6.3</version.logback>
+        <version.junit>6.1.3</version.junit>
+        <version.mockito>5.23.0</version.mockito>
+
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!--Lombok-->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${version.lombok}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!--Logback-->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${version.logback}</version>
+            </dependency>
+
+            <!--Junit-->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${version.junit}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!--Mockito-->
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${version.mockito}</version>
+                <scope>test</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+
+                <!--Clean plugin-->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${version.plugin.clean}</version>
+                </plugin>
+
+                <!--Compile plugin-->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${version.plugin.compile}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <release>${java.version}</release>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${version.lombok}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+
+                <!--Surefire plugin-->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${version.plugin.surefire}</version>
+                </plugin>
+
+                <!--Jar plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${version.plugin.jar}</version>
+                </plugin>
+
+                <!--Install plugin-->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${version.plugin.install}</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <finalName>Sandbox</finalName>
+
+    </build>
+
+</project>
