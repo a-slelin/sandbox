@@ -38,6 +38,7 @@
     </repositories>
 
     <modules>
+        <module>MailClient</module>
     </modules>
 
     <properties>

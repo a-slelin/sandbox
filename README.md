@@ -47,7 +47,8 @@ sandbox/                        a.slelin.work:sandbox              (pom, кор�
 
 Список модулей:
 
-* *Пока пусто — модули будут добавляться по мере появления экспериментов.*
+* **[MailClient](MailClient/README.md)** 📬: настольный почтовый клиент на **Java Swing** + **Jakarta Mail** —
+  отправка писем по **SMTP** и просмотр последних входящих по **IMAP**.
 
 ## 🧾 Корневой pom.xml
 
@@ -60,7 +61,7 @@ sandbox/                        a.slelin.work:sandbox              (pom, кор�
 | `name` / `description`    | Человекочитаемое имя и описание проекта.                                                                 |
 | `url` / `developers`      | Ссылка на репозиторий и информация о разработчике.                                                       |
 | `repositories`            | Явно указанный Maven Central.                                                                            |
-| `modules`                 | Список дочерних модулей (сейчас пуст).                                                                   |
+| `modules`                 | Список дочерних модулей.                                                                                 |
 | `properties` → General    | Кодировка `UTF-8`, `java.version = 25`, флаг `skipTests`.                                                |
 | `properties` → Plugins    | Версии плагинов `clean`, `compiler`, `surefire`, `jar`, `install`.                                       |
 | `properties` → Libraries  | Версии общих библиотек: **Lombok**, **Logback**, **JUnit**, **Mockito**.                                 |

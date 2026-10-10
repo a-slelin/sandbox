@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class ConfigManager {
+
+    private static final String CONFIG_NAME = "config.properties";
 
     private final Properties props = new Properties();
 
@@ -16,9 +20,12 @@ public class ConfigManager {
     }
 
     private void load() throws IOException {
-        try (InputStream in = getClass().getResourceAsStream("/config.properties")) {
+        Path external = Path.of(CONFIG_NAME);
+        try (InputStream in = Files.isRegularFile(external)
+                ? Files.newInputStream(external)
+                : getClass().getResourceAsStream("/" + CONFIG_NAME)) {
             if (in == null) {
-                throw new FileNotFoundException("config.properties not found");
+                throw new FileNotFoundException(CONFIG_NAME + " not found");
             }
             props.load(new InputStreamReader(in, StandardCharsets.UTF_8));
         }
@@ -41,7 +48,7 @@ public class ConfigManager {
     }
 
     public String getImapHost() {
-        return props.getProperty("imap.host");
+        return props.getProperty("imap.host").trim();
     }
 
     public int getImapPort() {

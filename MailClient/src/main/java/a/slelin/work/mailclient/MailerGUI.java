@@ -91,7 +91,7 @@ public class MailerGUI extends JFrame {
         from.setAlignmentX(Component.LEFT_ALIGNMENT);
         from.setBorder(new EmptyBorder(8, 0, 2, 0));
 
-        JLabel server = new JLabel("Сервер:  " + config.getSmtpHost() + " : " + config.getImapPort());
+        JLabel server = new JLabel("Сервер:  " + config.getSmtpHost() + " : " + config.getSmtpPort());
         server.setFont(new Font("SansSerif", Font.PLAIN, 13));
         server.setForeground(new Color(0x505A6B));
         server.setAlignmentX(Component.LEFT_ALIGNMENT);

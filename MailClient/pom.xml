@@ -1,31 +1,55 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>a.slelin.work</groupId>
+    <parent>
+        <groupId>a.slelin.work</groupId>
+        <artifactId>sandbox</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>a.slelin.work.sandbox</groupId>
     <artifactId>mailclient</artifactId>
-    <version>1.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
-    <name>mailclient</name>
-    <url>http://maven.apache.org</url>
+    <name>Sandbox::MailClient</name>
+
+    <description>Desktop mail client for sending (SMTP) and reading (IMAP) emails</description>
+
+    <properties>
+
+        <!--General-->
+        <main.class>a.slelin.work.mailclient.App</main.class>
+
+        <!--Plugins-->
+        <version.plugin.shade>3.6.2</version.plugin.shade>
+
+        <!--Libraries-->
+        <version.angus.mail>2.0.4</version.angus.mail>
+
+    </properties>
 
     <dependencies>
+
+        <!--Angus Mail (Jakarta Mail implementation)-->
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>jakarta.mail</artifactId>
-            <version>2.0.2</version>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>${version.angus.mail}</version>
         </dependency>
+
     </dependencies>
 
     <build>
-        <finalName>simple-mailer</finalName>
+
         <plugins>
+
+            <!--Shade plugin-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>${version.plugin.shade}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -33,25 +57,24 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>a.slelin.work.mailclient.App</mainClass>
+                                    <mainClass>${main.class}</mainClass>
                                 </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>16</source>
-                    <target>16</target>
-                </configuration>
-            </plugin>
+
         </plugins>
+
+        <finalName>MailClient</finalName>
+
     </build>
 
 </project>
