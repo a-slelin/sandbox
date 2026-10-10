@@ -10,7 +10,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen?logo=springboot)
 ![Swing](https://img.shields.io/badge/UI-Swing%20%2B%20FlatLaf-blue)
 ![Maven](https://img.shields.io/badge/Maven-multi--module-red?logo=apachemaven)
-![Tests](https://img.shields.io/badge/tests-13%20passed-success)
+![H2](https://img.shields.io/badge/DB-H2%20in--memory-blue)
 
 ![Главное окно](images/light.png)
 
@@ -27,7 +27,7 @@
 - [Клиент: интерфейс](#-клиент-интерфейс)
 - [Конфигурация](#-конфигурация)
 - [Быстрый старт](#-быстрый-старт)
-- [Тесты](#-тесты)
+- [База данных](#-база-данных)
 - [Возможные улучшения в будущем](#-возможные-улучшения-в-будущем)
 
 ---
@@ -55,13 +55,15 @@
 - вынести общие **DTO** в отдельный Maven-модуль;
 - сделать **красивый Swing**: FlatLaf, собственная отрисовка через `Graphics2D`, анимации, тёмная тема;
 - выполнять сетевые запросы в фоне (`SwingWorker`), не замораживая интерфейс, и периодически опрашивать сервер;
-- покрыть сервер **unit- и интеграционными тестами** (JUnit 6, AssertJ, `MockMvcTester`).
+- хранить данные через **Spring Data JPA** во временной базе **H2**: entity, связи, проекции, блокировки.
 
 ## ✨ Возможности
 
 ### 🖥️ Сервер
 
-- Хранение голосований в памяти (`ConcurrentHashMap`), потокобезопасный подсчёт голосов.
+- Хранение во временной базе **H2** (в памяти) через **JPA**; голоса считаются запросами к базе.
+- Один голос гарантирован дважды: проверкой в сервисе и уникальным индексом `(poll_id, voter)`; голоса и
+  завершение одного голосования идут по очереди благодаря блокировке строки (`PESSIMISTIC_WRITE`).
 - Один голос на участника: имена сравниваются без учёта регистра и пробелов по краям.
 - Проценты с округлением до десятых, сортировка: сначала открытые голосования, внутри — от новых к старым.
 - Валидация запросов с понятными сообщениями (на русском при заголовке `Accept-Language: ru`).
@@ -92,7 +94,8 @@
 | **Spring Boot** RestClient   | Client            | HTTP-запросы к серверу, Jackson 3 для JSON        |
 | **Swing** + **FlatLaf 3.7**  | Client            | Интерфейс, современный Look & Feel (macOS-темы)   |
 | **Lombok**                   | везде             | `@Builder`, `@RequiredArgsConstructor`, `@Slf4j`  |
-| **JUnit 6**, **AssertJ**     | Server            | Тесты, `MockMvcTester` для HTTP-слоя              |
+| **Spring Data JPA** (Hibernate 7) | Server       | Entity, репозитории, транзакции                   |
+| **H2**                       | Server            | Временная база в памяти + веб-консоль             |
 
 ## 📁 Структура модуля
 
@@ -107,8 +110,8 @@ Voting/                                   a.slelin.work.sandbox:voting          
 │       ├── VotingServer.java             точка входа
 │       ├── controller/                   PollController, GlobalExceptionHandler
 │       ├── service/                      PollService (бизнес-логика), PollMapper (модель → DTO)
-│       ├── model/                        Poll (голоса и правила), PollOption
-│       ├── repository/                   PollRepository (in-memory)
+│       ├── entity/                       Poll, PollOption, Vote (JPA entity)
+│       ├── repository/                   PollRepository, VoteRepository (Spring Data JPA)
 │       ├── exception/                    VotingException и наследники со своим HTTP-статусом
 │       └── config/                       DemoDataLoader
 └── Client/                               a.slelin.work.sandbox.voting:client    → Client.jar
@@ -122,12 +125,36 @@ Voting/                                   a.slelin.work.sandbox:voting          
 
 ```text
 ┌─────────────── Client ───────────────┐            ┌──────────────── Server ────────────────┐
-│ Swing UI ─► VotingApi ─► RestClient ─┼── HTTP ───►│ PollController ─► PollService ─► Poll  │
-│     ▲            (SwingWorker)       │   JSON     │        │                    PollRepository
+│ Swing UI ─► VotingApi ─► RestClient ─┼── HTTP ───►│ PollController ─► PollService          │
+│     ▲            (SwingWorker)       │   JSON     │        │          └─► Repositories ─► H2│
 │     └──── Timer: обновление 3 c ─────┤◄───────────┤ GlobalExceptionHandler → ErrorResponse │
 └──────────────────────────────────────┘            └────────────────────────────────────────┘
                      └──────────── общие DTO из Common ────────────┘
 ```
+
+## 🗃️ База данных
+
+Сервер хранит данные во **временной базе H2 в памяти** (`jdbc:h2:mem:voting`): схема создаётся из entity при старте
+(`ddl-auto: create-drop`) и исчезает при остановке сервера.
+
+```text
+polls                       poll_options                 votes
+├── id          UUID  PK    ├── id        BIGINT PK      ├── id         BIGINT PK
+├── question                ├── poll_id   → polls        ├── poll_id    → polls      ┐ уникальная
+├── description             ├── position                 ├── voter                   ┘ пара
+├── status      OPEN/CLOSED └── text                     ├── option_id  → poll_options
+├── created_at                                           └── voted_at
+└── closed_at
+```
+
+| Entity       | Что хранит                                                                                       |
+|--------------|--------------------------------------------------------------------------------------------------|
+| `Poll`       | Вопрос, описание, статус, даты. Варианты — `@OneToMany` с каскадом; счётчики вариантов и голосов — `@Formula`, поэтому список голосований строится одним запросом |
+| `PollOption` | Текст варианта и его позиция (`@OrderBy("position")`). `id` варианта — это `optionId` в API      |
+| `Vote`       | Кто (имя в нижнем регистре), за какой вариант и когда проголосовал                               |
+
+Посмотреть таблицы можно в веб-консоли: **http://localhost:8080/h2-console**
+(JDBC URL `jdbc:h2:mem:voting`, пользователь `sa`, пароль пустой).
 
 ## 🔌 Сервер: REST API
 
@@ -214,6 +241,8 @@ curl -X POST http://localhost:8080/api/polls/{id}/votes \
 |---------------------|--------------|-------------------------------------------|
 | `server.port`       | `8080`       | Порт сервера                              |
 | `voting.demo-data`  | `true`       | Создавать демонстрационные голосования    |
+| `spring.datasource.url` | `jdbc:h2:mem:voting` | Адрес временной базы H2           |
+| `spring.h2.console.enabled` | `true` | Веб-консоль базы на `/h2-console`        |
 
 **Клиент** — `Client/src/main/resources/application.yaml`:
 
@@ -245,23 +274,10 @@ java -jar Voting/Client/target/Client.jar --voting.client.voter=Борис;
 Из **IDEA** — запустить `VotingServer`, затем `VotingClient` (для нескольких клиентов включить
 *Allow multiple instances* в конфигурации запуска).
 
-## 🧪 Тесты
-
-```shell
-mvn test -pl Voting/Server -am;
-```
-
-| Класс                | Что проверяет                                                                     |
-|----------------------|-----------------------------------------------------------------------------------|
-| `PollTest`           | Модель: нумерация вариантов, подсчёт, один голос на участника, закрытое голосование |
-| `PollServiceTest`    | Сервис: нормализация ввода, дубликаты вариантов, проценты, сортировка, удаление   |
-| `PollControllerTest` | HTTP-слой целиком: сценарий создать → голосовать → завершить → удалить, ошибки 400/404/409 |
-
 ## 🔮 Возможные улучшения в будущем
 
-- Хранение в базе данных (H2 / PostgreSQL + Spring Data JPA) вместо памяти.
+- Постоянная база (PostgreSQL) и миграции схемы через Liquibase вместо `ddl-auto`.
 - Push-обновления через **WebSocket / SSE** вместо периодического опроса.
 - Несколько вариантов в одном голосе, анонимные голосования, дедлайн автозавершения.
 - Авторизация: завершать и удалять голосование может только его автор.
 - Экспорт результатов в CSV и диаграмма-«пончик» в клиенте.
-- Тесты клиента: `VotingApi` против `MockRestServiceServer`.

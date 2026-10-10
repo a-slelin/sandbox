@@ -1,7 +1,9 @@
 package a.slelin.work.voting.server.config;
 
-import a.slelin.work.voting.server.model.Poll;
-import a.slelin.work.voting.server.repository.PollRepository;
+import a.slelin.work.voting.common.dto.PollCreateRequest;
+import a.slelin.work.voting.common.dto.PollResponse;
+import a.slelin.work.voting.common.dto.VoteRequest;
+import a.slelin.work.voting.server.service.PollService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Наполняет сервер демонстрационными голосованиями, чтобы клиенту сразу было что показать.
+ * Наполняет базу демонстрационными голосованиями, чтобы клиенту сразу было что показать.
+ * Данные проходят через {@link PollService}, то есть через те же правила, что и запросы клиентов.
  * Отключается свойством {@code voting.demo-data=false}.
  */
 @Slf4j
@@ -21,39 +24,40 @@ import java.util.List;
 @ConditionalOnProperty(name = "voting.demo-data", havingValue = "true", matchIfMissing = true)
 public class DemoDataLoader implements ApplicationRunner {
 
-    private final PollRepository repository;
+    private final PollService service;
 
     @Override
     public void run(ApplicationArguments args) {
-        Poll language = new Poll("Какой язык программирования изучить следующим?",
-                "Выбираем язык для следующего пет-проекта в песочнице.",
-                List.of("Kotlin", "Go", "Rust", "Python", "C++"));
-        vote(language, 1, "Анна", "Борис", "Вика", "Глеб");
-        vote(language, 3, "Дима", "Егор", "Женя");
-        vote(language, 2, "Зоя", "Иван");
-        vote(language, 4, "Кира");
-
-        Poll ide = new Poll("Лучшая IDE для Java",
+        PollResponse ide = service.create(new PollCreateRequest("Лучшая IDE для Java",
                 null,
-                List.of("IntelliJ IDEA", "Eclipse", "VS Code", "NetBeans"));
-        vote(ide, 1, "Анна", "Борис", "Вика", "Глеб", "Дима", "Егор");
-        vote(ide, 3, "Женя", "Зоя");
-        vote(ide, 2, "Иван");
-        ide.close();
+                List.of("IntelliJ IDEA", "Eclipse", "VS Code", "NetBeans")));
+        vote(ide, 0, "Анна", "Борис", "Вика", "Глеб", "Дима", "Егор");
+        vote(ide, 2, "Женя", "Зоя");
+        vote(ide, 1, "Иван");
+        service.close(ide.id(), null);
 
-        Poll lunch = new Poll("Куда идём обедать в пятницу?",
+        PollResponse language = service.create(new PollCreateRequest(
+                "Какой язык программирования изучить следующим?",
+                "Выбираем язык для следующего пет-проекта в песочнице.",
+                List.of("Kotlin", "Go", "Rust", "Python", "C++")));
+        vote(language, 0, "Анна", "Борис", "Вика", "Глеб");
+        vote(language, 2, "Дима", "Егор", "Женя");
+        vote(language, 1, "Зоя", "Иван");
+        vote(language, 3, "Кира");
+
+        PollResponse lunch = service.create(new PollCreateRequest("Куда идём обедать в пятницу?",
                 "Голосование закроется в четверг вечером.",
-                List.of("Пиццерия", "Суши-бар", "Грузинская кухня", "Столовая"));
-        vote(lunch, 3, "Борис", "Кира");
-        vote(lunch, 1, "Анна");
+                List.of("Пиццерия", "Суши-бар", "Грузинская кухня", "Столовая")));
+        vote(lunch, 2, "Борис", "Кира");
+        vote(lunch, 0, "Анна");
 
-        List.of(ide, language, lunch).forEach(repository::save);
-        log.info("Demo data loaded: {} polls", repository.findAll().size());
+        log.info("Demo data loaded: {} polls", service.findAll().size());
     }
 
-    private static void vote(Poll poll, long optionId, String... voters) {
+    private void vote(PollResponse poll, int optionIndex, String... voters) {
+        long optionId = poll.options().get(optionIndex).id();
         for (String voter : voters) {
-            poll.vote(voter, optionId);
+            service.vote(poll.id(), new VoteRequest(voter, optionId));
         }
     }
 }

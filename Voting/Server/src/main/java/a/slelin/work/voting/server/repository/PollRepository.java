@@ -1,36 +1,22 @@
 package a.slelin.work.voting.server.repository;
 
-import a.slelin.work.voting.server.model.Poll;
-import org.springframework.stereotype.Repository;
+import a.slelin.work.voting.server.entity.Poll;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Хранилище голосований в памяти: данные живут, пока запущен сервер.
- */
-@Repository
-public class PollRepository {
+public interface PollRepository extends JpaRepository<Poll, UUID> {
 
-    private final Map<UUID, Poll> polls = new ConcurrentHashMap<>();
-
-    public Poll save(Poll poll) {
-        polls.put(poll.getId(), poll);
-        return poll;
-    }
-
-    public Optional<Poll> findById(UUID id) {
-        return Optional.ofNullable(polls.get(id));
-    }
-
-    public Collection<Poll> findAll() {
-        return polls.values();
-    }
-
-    public boolean deleteById(UUID id) {
-        return polls.remove(id) != null;
-    }
+    /**
+     * Загружает голосование с блокировкой строки до конца транзакции:
+     * голоса и завершение одного голосования выполняются строго по очереди.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Poll p where p.id = :id")
+    Optional<Poll> findByIdForUpdate(@Param("id") UUID id);
 }

@@ -15,7 +15,7 @@
 
     <name>Sandbox::Voting::Server</name>
 
-    <description>Spring Boot REST server that stores polls and counts votes</description>
+    <description>Spring Boot REST server that stores polls in H2 via JPA and counts votes</description>
 
     <dependencies>
 
@@ -43,10 +43,22 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!--Spring Boot Web MVC Test-->
+        <!--Spring Boot Data JPA-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!--Spring Boot H2 Console-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
+        </dependency>
+
+        <!--H2-->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
         </dependency>
 
     </dependencies>

@@ -2,6 +2,25 @@ spring:
   application:
     name: Voting Server
 
+  # Временная база H2 в памяти: живёт, пока запущен сервер
+  datasource:
+    url: jdbc:h2:mem:voting;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+
+  jpa:
+    # Схема создаётся из entity при старте и удаляется при остановке
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    show-sql: false
+
+  # Веб-консоль базы: http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:voting, пользователь sa)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
 server:
   port: 8080
 
