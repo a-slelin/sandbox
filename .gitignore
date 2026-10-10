@@ -47,6 +47,10 @@ cmake-build-*/
 # Node
 node_modules/
 
+# Secrets and local configs
+MailClient/config.properties
+MailClient/src/main/resources/config.properties
+
 # Logs, temp and local files
 *.log
 *.lck

@@ -38,6 +38,8 @@
     </repositories>
 
     <modules>
+        <module>MailClient</module>
+        <module>Voting</module>
     </modules>
 
     <properties>
@@ -59,6 +61,7 @@
         <version.plugin.surefire>3.5.6</version.plugin.surefire>
         <version.plugin.jar>3.5.1</version.plugin.jar>
         <version.plugin.install>3.1.4</version.plugin.install>
+        <version.plugin.flatten>1.8.0</version.plugin.flatten>
 
         <!--Libraries-->
         <version.lombok>1.18.48</version.lombok>
@@ -84,6 +87,15 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${version.logback}</version>
+            </dependency>
+
+            <!--Junit BOM: aligns versions of all JUnit artifacts-->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${version.junit}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!--Junit-->
@@ -162,6 +174,37 @@
 
             </plugins>
         </pluginManagement>
+
+        <plugins>
+
+            <!--Flatten plugin: replaces ${revision} in installed poms-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>${version.plugin.flatten}</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten-clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
 
         <finalName>Sandbox</finalName>
 

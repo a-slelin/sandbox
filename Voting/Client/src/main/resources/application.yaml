@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: Voting Client
+  main:
+    banner-mode: off
+
+voting:
+  client:
+    # Адрес сервера голосований
+    server-url: http://localhost:8080
+    # Имя участника; если пустое — клиент спросит его при запуске
+    voter: ""
+    # Как часто обновлять результаты с сервера
+    refresh-interval: 3s
+    # Запускаться в тёмной теме
+    dark-theme: false
+
+logging:
+  level:
+    root: warn
+    a.slelin.work.voting: info

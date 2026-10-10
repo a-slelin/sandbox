@@ -1,0 +1,80 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>a.slelin.work</groupId>
+        <artifactId>sandbox</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>a.slelin.work.sandbox</groupId>
+    <artifactId>mailclient</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>Sandbox::MailClient</name>
+
+    <description>Desktop mail client for sending (SMTP) and reading (IMAP) emails</description>
+
+    <properties>
+
+        <!--General-->
+        <main.class>a.slelin.work.mailclient.App</main.class>
+
+        <!--Plugins-->
+        <version.plugin.shade>3.6.2</version.plugin.shade>
+
+        <!--Libraries-->
+        <version.angus.mail>2.0.4</version.angus.mail>
+
+    </properties>
+
+    <dependencies>
+
+        <!--Angus Mail (Jakarta Mail implementation)-->
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>${version.angus.mail}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+
+        <plugins>
+
+            <!--Shade plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${version.plugin.shade}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${main.class}</mainClass>
+                                </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+        <finalName>MailClient</finalName>
+
+    </build>
+
+</project>

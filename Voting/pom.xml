@@ -1,0 +1,141 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>a.slelin.work</groupId>
+        <artifactId>sandbox</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>a.slelin.work.sandbox</groupId>
+    <artifactId>voting</artifactId>
+
+    <packaging>pom</packaging>
+
+    <name>Sandbox::Voting</name>
+
+    <description>Client-server voting application: Spring Boot REST server and Spring Boot Swing client</description>
+
+    <modules>
+        <module>Common</module>
+        <module>Server</module>
+        <module>Client</module>
+    </modules>
+
+    <properties>
+
+        <!--Libraries-->
+        <version.flatlaf>3.7.2</version.flatlaf>
+        <version.jakarta.validation>3.1.1</version.jakarta.validation>
+        <version.h2>2.4.240</version.h2>
+
+        <!--Spring Boot Libraries-->
+        <version.spring.boot>4.1.1</version.spring.boot>
+
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!--Voting Common-->
+            <dependency>
+                <groupId>a.slelin.work.sandbox.voting</groupId>
+                <artifactId>common</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!--FlatLaf-->
+            <dependency>
+                <groupId>com.formdev</groupId>
+                <artifactId>flatlaf</artifactId>
+                <version>${version.flatlaf}</version>
+            </dependency>
+
+            <!--Jakarta Validation API-->
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${version.jakarta.validation}</version>
+            </dependency>
+
+            <!--H2-->
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${version.h2}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <!--Spring Boot Data JPA-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+            <!--Spring Boot H2 Console-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-h2console</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+            <!--Spring Boot Web MVC-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-webmvc</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+            <!--Spring Boot Validation-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-validation</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+            <!--Spring Boot Rest Client-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-restclient</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+            <!--Spring Boot Jackson-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-jackson</artifactId>
+                <version>${version.spring.boot}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+
+                <!--Spring Boot plugin-->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${version.spring.boot}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <finalName>Voting</finalName>
+
+    </build>
+
+</project>

@@ -47,7 +47,12 @@ sandbox/                        a.slelin.work:sandbox              (pom, кор�
 
 Список модулей:
 
-* *Пока пусто — модули будут добавляться по мере появления экспериментов.*
+* **[MailClient](MailClient/README.md)** 📬: настольный почтовый клиент на **Java Swing** + **Jakarta Mail** —
+  отправка писем по **SMTP** и просмотр последних входящих по **IMAP**.
+
+* **[Voting](Voting/README.md)** 🗳️: клиент-серверное голосование — REST-сервер на **Spring Boot** и настольный
+  клиент на **Spring Boot + Swing (FlatLaf)** с анимированными результатами в реальном времени. Группа из трёх
+  подмодулей: `Common` (общие DTO), `Server`, `Client`.
 
 ## 🧾 Корневой pom.xml
 
@@ -60,13 +65,14 @@ sandbox/                        a.slelin.work:sandbox              (pom, кор�
 | `name` / `description`    | Человекочитаемое имя и описание проекта.                                                                 |
 | `url` / `developers`      | Ссылка на репозиторий и информация о разработчике.                                                       |
 | `repositories`            | Явно указанный Maven Central.                                                                            |
-| `modules`                 | Список дочерних модулей (сейчас пуст).                                                                   |
+| `modules`                 | Список дочерних модулей.                                                                                 |
 | `properties` → General    | Кодировка `UTF-8`, `java.version = 25`, флаг `skipTests`.                                                |
-| `properties` → Plugins    | Версии плагинов `clean`, `compiler`, `surefire`, `jar`, `install`.                                       |
+| `properties` → Plugins    | Версии плагинов `clean`, `compiler`, `surefire`, `jar`, `install`, `flatten`.                            |
 | `properties` → Libraries  | Версии общих библиотек: **Lombok**, **Logback**, **JUnit**, **Mockito**.                                 |
 | `lastCheckVersion`        | Дата последней проверки актуальности версий.                                                             |
-| `dependencyManagement`    | Общие библиотеки с версиями и `scope`. Сами по себе **не подключаются** — модуль объявляет нужные без версии. |
+| `dependencyManagement`    | Общие библиотеки с версиями и `scope`. Сами по себе **не подключаются** — модуль объявляет нужные без версии. Импорт `junit-bom` выравнивает версии всех артефактов JUnit (в том числе пришедших транзитивно, например из Spring Boot). |
 | `pluginManagement`        | Настройки плагинов: компиляция под Java 25 (`release`), Lombok как annotation processor, флаг `-parameters`. |
+| `plugins` → flatten       | `flatten-maven-plugin` подставляет значение `${revision}` в устанавливаемые pom. Без него модуль, зависящий от другого модуля песочницы, не соберётся отдельно (`-pl`) — Maven не найдёт родителя с версией `${revision}`. |
 | `finalName`               | Имя собираемого артефакта.                                                                               |
 
 Специфичные для эксперимента библиотеки (Spring, БД, MapStruct и т.д.) объявляются в `pom.xml` самого модуля —
