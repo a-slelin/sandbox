@@ -89,7 +89,7 @@ public final class PemReader {
     private static void requireFile(Path file) {
         if (!Files.isRegularFile(file)) {
             throw new CertificateLoadException("Нет файла " + file.toAbsolutePath().normalize()
-                                               + " — сгенерируйте сертификаты (см. MutualTls/README.md)");
+                                               + " — создайте сертификаты (см. MutualTls/certs/HELP.md)");
         }
     }
 }

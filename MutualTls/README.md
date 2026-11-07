@@ -129,9 +129,9 @@
 MutualTls/                                a.slelin.work.sandbox:mutualtls          (pom)
 ├── pom.xml                               версия FlatLaf, общий shade-плагин
 ├── certs/                                конфиги OpenSSL и скрипты генерации
+│   ├── HELP.md                           пошаговая инструкция по созданию сертификатов
 │   ├── ca.cnf, server.cnf, client.cnf    поля «кому выдан» и расширения X.509
-│   ├── generate.sh / generate.bat        генерация всего набора одной командой
-│   └── *.pem, *.key                      ← создаются скриптом, в git НЕ попадают
+│   └── *.pem, *.key                      ← создаются по HELP.md, в git НЕ попадают
 ├── Common/                               a.slelin.work.sandbox.mutualtls:common
 │   └── .../mutualtls/common/
 │       ├── PemReader.java                PEM → X509Certificate / PrivateKey (PKCS#8)
@@ -186,102 +186,28 @@ MutualTls/                                a.slelin.work.sandbox:mutualtls       
 | Клиент  | `client.pem` + `client.key`  | `ca.pem`                             |
 
 `ca.key` нужен **только** для выпуска сертификатов; программам он не нужен. Закрытые ключи — секрет, поэтому
-`*.pem` и `*.key` из `certs/` добавлены в `.gitignore`: каждый генерирует свой набор.
+`*.pem` и `*.key` из `certs/` добавлены в `.gitignore`: каждый создаёт свой набор по
+[`certs/HELP.md`](certs/HELP.md).
 
 ## 🔑 Создание сертификатов через OpenSSL
 
-> Нужен **OpenSSL 3.x** (`openssl version`). На Windows — например, сборка с
-> [slproweb.com](https://slproweb.com/products/Win32OpenSSL.html) или OpenSSL из Git for Windows; `openssl` должен
-> быть доступен в `PATH`.
+Сертификаты создаются вручную командами OpenSSL. **Подробная пошаговая инструкция — в
+[`certs/HELP.md`](certs/HELP.md)**: там каждая команда записана целиком, с разбором каждого флага и ожидаемым
+выводом, чтобы её можно было скопировать и выполнить.
 
-### Вариант 1. Одной командой
+| Шаг | Что делается                                                        | Какие файлы появляются          |
+|-----|---------------------------------------------------------------------|---------------------------------|
+| 0   | Проверка OpenSSL 3.x, переход в папку `MutualTls/certs`             | —                               |
+| 1   | Ключ корневого CA и самоподписанный сертификат CA                   | `ca.key`, `ca.pem`              |
+| 2   | Ключ сервера → запрос (CSR) → подпись запроса ключом CA             | `server.key`, `server.pem`, `ca.srl` |
+| 3   | Ключ клиента → запрос (CSR) → подпись запроса ключом CA             | `client.key`, `client.pem`      |
+| 4   | Проверка цепочек, соответствия ключей и отпечатков SHA-256          | —                               |
+| 5   | Удаление временных запросов `server.csr` и `client.csr`             | —                               |
+| 6   | Сборка и запуск сервера и клиента                                   | —                               |
 
-```shell
-# Linux / macOS / Git Bash
-cd MutualTls/certs;
-./generate.sh;
-```
-
-```bat
-:: Windows (cmd)
-cd MutualTls\certs
-generate.bat
-```
-
-Скрипт выполняет те же шаги, что описаны ниже, проверяет цепочки (`openssl verify`) и печатает итог.
-
-### Вариант 2. Вручную, по шагам
-
-Все команды выполняются в папке `MutualTls/certs`. Поля сертификатов (в том числе ФИО на кириллице) лежат в
-`*.cnf`, а не в командной строке: так кириллица не ломается в консоли Windows. Флаг `-utf8` говорит OpenSSL читать
-значения как UTF-8.
-
-**Шаг 1. Корневой удостоверяющий центр (CA)**
-
-```shell
-# Закрытый ключ CA: RSA 4096 бит в формате PKCS#8 («BEGIN PRIVATE KEY»)
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out ca.key
-
-# Самоподписанный сертификат CA на 3 года: поля из [dn], расширения из [ca_ext] файла ca.cnf
-openssl req -new -x509 -utf8 -config ca.cnf -key ca.key -days 1095 -out ca.pem
-```
-
-- `genpkey` — создаёт ключ; Java читает именно PKCS#8, поэтому используем `genpkey`, а не устаревший `genrsa`.
-- `req -new -x509` — создаёт запрос и сразу подписывает его тем же ключом, т.е. получается **самоподписанный**
-  сертификат — корень доверия.
-- `basicConstraints = CA:TRUE` и `keyUsage = keyCertSign` разрешают этому сертификату подписывать другие.
-
-**Шаг 2. Сертификат сервера**
-
-```shell
-# Ключ сервера
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server.key
-
-# Запрос на сертификат (CSR): «я, Слелин Александр Владимирович из ПМИ-21МО, владею этим ключом»
-openssl req -new -utf8 -config server.cnf -key server.key -out server.csr
-
-# CA подписывает запрос и добавляет расширения из секции [server_ext]: serverAuth и subjectAltName
-openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 825 \
-        -extfile server.cnf -extensions server_ext -out server.pem
-```
-
-- CSR (Certificate Signing Request) содержит открытый ключ и поля «кому выдан», подписанные закрытым ключом
-  владельца. Сам закрытый ключ CA не видит.
-- `-CAcreateserial` создаёт файл `ca.srl` со счётчиком серийных номеров.
-- `subjectAltName = DNS:localhost, IP:127.0.0.1` — **обязательно**: клиент сверяет хост, к которому подключается,
-  именно с этим списком (поле CN для этого давно не используется).
-
-**Шаг 3. Сертификат клиента**
-
-```shell
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out client.key
-openssl req -new -utf8 -config client.cnf -key client.key -out client.csr
-openssl x509 -req -in client.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 825 \
-        -extfile client.cnf -extensions client_ext -out client.pem
-```
-
-Отличие от сервера — `extendedKeyUsage = clientAuth` и нет `subjectAltName` (имя хоста клиента не проверяется).
-
-> На Windows в `cmd` перенос строки делается символом `^`, а не `\` — или просто пишите команду в одну строку.
-
-**Шаг 4. Проверка**
-
-```shell
-# Цепочки: оба сертификата должны быть подписаны нашим CA
-openssl verify -CAfile ca.pem server.pem client.pem
-
-# Посмотреть сертификат целиком (кириллица — с -nameopt utf8)
-openssl x509 -in client.pem -noout -text -nameopt utf8
-
-# Коротко: кому, кем, до какого числа
-openssl x509 -in server.pem -noout -subject -issuer -enddate -ext subjectAltName -nameopt utf8
-
-# Отпечаток SHA-256 — должен совпасть с карточкой в GUI
-openssl x509 -in server.pem -noout -fingerprint -sha256
-```
-
-После успешной проверки файлы `*.csr` можно удалить. Чтобы поменять ФИО, группу или организацию, отредактируйте
-секцию `[ dn ]` в `*.cnf` (сохраняйте в **UTF-8**) и сгенерируйте набор заново.
+Поля «кому выдан» (ФИО, группа, организация) и расширения X.509 записаны в `ca.cnf`, `server.cnf` и `client.cnf`,
+а не в командной строке — так кириллица не ломается в консоли Windows. Чтобы поменять ФИО или группу, отредактируйте
+секцию `[ dn ]` нужного файла (в кодировке **UTF-8**) и выпустите сертификаты заново по `HELP.md`.
 
 ## ⚙️ Как это устроено в коде
 
@@ -360,8 +286,7 @@ server.setNeedClientAuth(true);   // ← вот и всё отличие mTLS о
 ## 🚀 Быстрый старт
 
 ```shell
-# 1. Генерируем сертификаты (один раз);
-cd MutualTls/certs && ./generate.sh && cd ../..;
+# 1. Создаём сертификаты по инструкции MutualTls/certs/HELP.md (один раз);
 
 # 2. Из корня песочницы собираем модуль вместе с зависимостями;
 mvn clean install -pl MutualTls -amd -am;
@@ -392,18 +317,32 @@ java -jar MutualTls/Client/target/Client.jar;
 
 | Что сделать                                                                     | Что произойдёт                                                                 |
 |---------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| `openssl s_client -connect localhost:8443 -CAfile ca.pem` (без сертификата)    | Сервер: `отказ в рукопожатии … certificate_required`                           |
-| То же с `-cert client.pem -key client.key`, затем ввести `WHOAMI`              | `WELCOME …`, `YOU ARE Слелин Александр Владимирович, ПМИ-21МО …` — mTLS из OpenSSL |
+| Подключиться через OpenSSL **без** сертификата клиента (команда 1 ниже)          | Сервер: `отказ в рукопожатии … certificate_required`                           |
+| Подключиться через OpenSSL **с** сертификатом клиента (команда 2 ниже), ввести `WHOAMI` | `WELCOME Слелин Александр Владимирович (ПМИ-21МО)`, затем `YOU ARE Слелин Александр Владимирович, ПМИ-21МО · выдан «Слелин А. В. Root CA»` |
 | Подменить `client.pem`/`client.key` сертификатом от другого CA → «Переподключиться» | Клиент: `TLS: сервер требует сертификат клиента, подписанный его CA…`; карточка «✕ не подписан ca.pem» |
 | В клиенте указать хост `127.0.0.2` (или имя компьютера)                        | `TLS: имя хоста не совпадает с subjectAltName сертификата сервера`             |
 | Остановить сервер (`Ctrl+C`) при подключённом клиенте                          | Статус «Соединение потеряно», кнопка «Переподключиться»                        |
-| Перегенерировать сертификаты и нажать «Переподключиться» (сервер тоже перезапустить) | Новые серийные номера и SHA-256 в карточках                                    |
+| Перевыпустить сертификаты по `certs/HELP.md`, перезапустить сервер и нажать «Переподключиться» | Новые серийные номера и SHA-256 в карточках                                    |
+
+Команды для OpenSSL выполняются из папки `MutualTls/certs`, пока запущен сервер.
+
+**Команда 1** — без сертификата клиента:
+
+```shell
+openssl s_client -connect localhost:8443 -CAfile ca.pem
+```
+
+**Команда 2** — с сертификатом клиента (после подключения введите `WHOAMI` и нажмите Enter; выход — `Ctrl+C`):
+
+```shell
+openssl s_client -connect localhost:8443 -CAfile ca.pem -cert client.pem -key client.key
+```
 
 ## 🩺 Частые проблемы
 
 | Сообщение                                          | Причина и решение                                                                   |
 |----------------------------------------------------|-------------------------------------------------------------------------------------|
-| `Нет файла …/client.pem — сгенерируйте сертификаты` | Не выполнен `generate.sh`/`generate.bat` или выбрана не та папка                    |
+| `Нет файла …/client.pem — сгенерируйте сертификаты` | Сертификаты не созданы (см. [`certs/HELP.md`](certs/HELP.md)) или выбрана не та папка |
 | `Сервер недоступен — он запущен?`                  | Сервер не запущен или другой порт                                                   |
 | `Ключ … в старом формате (PKCS#1/SEC1)`            | Ключ создан `genrsa` в OpenSSL 1.x: `openssl pkcs8 -topk8 -nocrypt -in old.key -out client.key` |
 | `сертификат сервера не подписан нашим ca.pem`      | Сервер и клиент используют наборы из разных генераций — перезапустите сервер        |
