@@ -4,10 +4,12 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
@@ -82,6 +84,35 @@ public record CertificateBundle(String name, Path directory, X509Certificate cer
             return context;
         } catch (Exception e) {
             throw new CertificateLoadException("Не удалось создать SSLContext: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Проверяет, что закрытый ключ — пара к открытому ключу из сертификата.
+     * <p>
+     * Подписываем тестовые данные закрытым ключом и проверяем подпись открытым ключом сертификата. Если ключ
+     * «левый», собеседник отвергнет рукопожатие: подпись CertificateVerify не сойдётся.
+     */
+    public boolean isKeyMatchingCertificate() {
+        try {
+            byte[] data = "mtls-key-check".getBytes(StandardCharsets.UTF_8);
+            // Алгоритм подписи выбираем по типу ключа
+            String algorithm = switch (privateKey.getAlgorithm()) {
+                case "RSA" -> "SHA256withRSA";
+                case "EC" -> "SHA256withECDSA";
+                default -> privateKey.getAlgorithm(); // Ed25519 и другие подписывают «как есть»
+            };
+            Signature signer = Signature.getInstance(algorithm);
+            signer.initSign(privateKey);
+            signer.update(data);
+            byte[] signature = signer.sign();
+
+            Signature verifier = Signature.getInstance(algorithm);
+            verifier.initVerify(certificate.getPublicKey());
+            verifier.update(data);
+            return verifier.verify(signature);
+        } catch (GeneralSecurityException e) {
+            return false;
         }
     }
 

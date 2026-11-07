@@ -7,6 +7,7 @@ import a.slelin.work.mutualtls.client.connection.SessionInfo;
 import a.slelin.work.mutualtls.client.connection.TlsConnection;
 import a.slelin.work.mutualtls.client.ui.ConsolePanel.Kind;
 import a.slelin.work.mutualtls.common.CertificateBundle;
+import a.slelin.work.mutualtls.common.CertificateInfo;
 import a.slelin.work.mutualtls.common.CertificateLoadException;
 import a.slelin.work.mutualtls.common.CertificatePrinter;
 import a.slelin.work.mutualtls.common.Protocol;
@@ -24,6 +25,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -137,12 +139,20 @@ public class MainFrame extends JFrame implements TlsConnection.Listener {
         }
 
         boolean signed = bundle.isSignedByCa();
-        clientCard.show(bundle.certificate(), "client.pem + client.key",
-                List.of(signed ? "✓ подписан ca.pem" : "✕ не подписан ca.pem"));
+        boolean keyMatches = bundle.isKeyMatchingCertificate();
+        clientCard.show(bundle.certificate(), "client.pem + client.key", List.of(
+                signed ? "✓ подписан ca.pem" : "✕ не подписан ca.pem",
+                keyMatches ? "✓ ключ от сертификата" : "✕ ключ не от сертификата"));
         caCard.show(bundle.ca(), "ca.pem · им проверяется сервер", List.of("✓ доверенный корень"));
         console.append(Kind.INFO, "Загружен набор сертификатов из " + dir);
         if (!signed) {
             console.append(Kind.ERROR, "client.pem не подписан ca.pem — сервер его, скорее всего, отвергнет");
+        }
+        if (!keyMatches) {
+            console.append(Kind.ERROR, "client.key не от client.pem — сервер не примет подпись рукопожатия");
+        }
+        if (!CertificateInfo.of(bundle.certificate()).isValidAt(Instant.now())) {
+            console.append(Kind.ERROR, "Срок действия client.pem истёк — сервер его отвергнет");
         }
         // Набор сертификатов дублируется в консоль (stdout), как требует задание
         CertificatePrinter.print(System.out, bundle);

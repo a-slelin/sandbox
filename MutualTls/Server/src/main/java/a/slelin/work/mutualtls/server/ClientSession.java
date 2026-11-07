@@ -46,11 +46,39 @@ final class ClientSession implements Runnable {
             communicate(info);
             Log.info("клиент " + address + " отключился");
         } catch (SSLHandshakeException e) {
-            // Типичные причины: у клиента нет сертификата, он подписан чужим CA или истёк
-            Log.error("отказ в рукопожатии с " + address + ": " + e.getMessage());
+            Log.error("отказ в рукопожатии с " + address + ": " + hint(e.getMessage()));
+            Log.error("    причина от JSSE: " + e.getMessage());
         } catch (IOException e) {
             Log.error("соединение с " + address + " прервано: " + e.getMessage());
         }
+    }
+
+    /**
+     * Переводит типичные ошибки рукопожатия на понятный язык.
+     */
+    private static String hint(String message) {
+        if (message == null) {
+            return "неизвестная ошибка";
+        }
+        if (message.contains("Empty client certificate chain")) {
+            return "клиент не предъявил сертификат, выданный нашим CA";
+        }
+        if (message.contains("Invalid CertificateVerify signature")) {
+            return "подпись клиента не сходится — его закрытый ключ не от предъявленного сертификата";
+        }
+        if (message.contains("validity check failed")) {
+            return "срок действия сертификата клиента истёк или ещё не наступил";
+        }
+        if (message.contains("PKIX path")) {
+            return "сертификат клиента не подписан нашим ca.pem";
+        }
+        if (message.contains("Extended key usage") || message.contains("clientAuth")) {
+            return "у сертификата клиента нет назначения clientAuth";
+        }
+        if (message.contains("certificate_unknown") || message.contains("bad_certificate")) {
+            return "клиент отверг сертификат сервера";
+        }
+        return message;
     }
 
     private void communicate(CertificateInfo client) throws IOException {

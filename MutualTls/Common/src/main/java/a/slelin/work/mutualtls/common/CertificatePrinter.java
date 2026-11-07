@@ -33,6 +33,9 @@ public final class CertificatePrinter {
         out.println(bundle.isSignedByCa()
                 ? "  [OK] " + bundle.name() + ".pem подписан доверенным CA"
                 : "  [!!] " + bundle.name() + ".pem НЕ подписан ca.pem — собеседник его отвергнет!");
+        out.println(bundle.isKeyMatchingCertificate()
+                ? "  [OK] " + bundle.name() + ".key — пара к " + bundle.name() + ".pem"
+                : "  [!!] " + bundle.name() + ".key НЕ от " + bundle.name() + ".pem — рукопожатие не пройдёт!");
         out.println();
     }
 

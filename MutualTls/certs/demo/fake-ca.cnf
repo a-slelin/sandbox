@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+#  «Чужой» удостоверяющий центр — только для демонстрации отказов mTLS
+#  (см. MutualTls/certs/DEMO.md). Ни сервер, ни клиент ему не доверяют.
+# ---------------------------------------------------------------------------
+
+[ req ]
+prompt             = no
+utf8               = yes
+string_mask        = utf8only
+default_md         = sha256
+distinguished_name = dn
+x509_extensions    = ca_ext
+
+[ dn ]
+C  = RU
+O  = Злоумышленник
+CN = Чужой CA (Hacker CA)
+
+[ ca_ext ]
+basicConstraints       = critical, CA:TRUE, pathlen:0
+keyUsage               = critical, keyCertSign, cRLSign
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always
