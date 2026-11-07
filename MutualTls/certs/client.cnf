@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+#  Сертификат клиента: «кому выдан» — ФИО + группа.
+#  Именно его сервер требует при mTLS (setNeedClientAuth(true)).
+# ---------------------------------------------------------------------------
+
+[ req ]
+prompt             = no
+utf8               = yes
+string_mask        = utf8only
+default_md         = sha256
+distinguished_name = dn
+
+[ dn ]
+C            = RU
+L            = Ярославль
+O            = ЯрГУ им. П. Г. Демидова
+OU           = ПМИ-21МО
+CN           = Слелин Александр Владимирович
+emailAddress = a.slelin.work@mail.ru
+
+# Расширения подставляются при подписи в CA (openssl x509 ... -extensions client_ext)
+[ client_ext ]
+basicConstraints       = critical, CA:FALSE
+keyUsage               = critical, digitalSignature, keyEncipherment
+extendedKeyUsage       = clientAuth                     # годится только для TLS-клиента
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid, issuer

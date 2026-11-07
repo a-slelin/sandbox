@@ -1,0 +1,59 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>a.slelin.work.sandbox</groupId>
+        <artifactId>mutualtls</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <groupId>a.slelin.work.sandbox.mutualtls</groupId>
+    <artifactId>client</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>Sandbox::MutualTls::Client</name>
+
+    <description>Swing (FlatLaf) mTLS client: certificate set, connection status and Connect/Reconnect</description>
+
+    <properties>
+
+        <!--General-->
+        <main.class>a.slelin.work.mutualtls.client.MtlsClient</main.class>
+
+    </properties>
+
+    <dependencies>
+
+        <!--MutualTls Common-->
+        <dependency>
+            <groupId>a.slelin.work.sandbox.mutualtls</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
+        <!--FlatLaf-->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+
+        <plugins>
+
+            <!--Shade plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+            </plugin>
+
+        </plugins>
+
+        <finalName>Client</finalName>
+
+    </build>
+
+</project>

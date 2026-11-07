@@ -63,3 +63,9 @@ MailClient/src/main/resources/config.properties
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# MutualTls: generated certificates and private keys (see MutualTls/README.md)
+MutualTls/certs/*.pem
+MutualTls/certs/*.key
+MutualTls/certs/*.csr
+MutualTls/certs/*.srl

@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+#  Сертификат сервера: «кому выдан» — ФИО + группа.
+#  Имя хоста, к которому подключается клиент, проверяется по subjectAltName,
+#  поэтому туда обязательно вписаны localhost и 127.0.0.1.
+# ---------------------------------------------------------------------------
+
+[ req ]
+prompt             = no
+utf8               = yes
+string_mask        = utf8only
+default_md         = sha256
+distinguished_name = dn
+
+[ dn ]
+C  = RU
+L  = Ярославль
+O  = ЯрГУ им. П. Г. Демидова
+OU = ПМИ-21МО
+CN = Слелин Александр Владимирович
+
+# Расширения подставляются при подписи в CA (openssl x509 ... -extensions server_ext)
+[ server_ext ]
+basicConstraints       = critical, CA:FALSE
+keyUsage               = critical, digitalSignature, keyEncipherment
+extendedKeyUsage       = serverAuth                     # годится только для TLS-сервера
+subjectAltName         = @alt_names
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid, issuer
+
+[ alt_names ]
+DNS.1 = localhost
+IP.1  = 127.0.0.1

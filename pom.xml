@@ -40,6 +40,7 @@
     <modules>
         <module>MailClient</module>
         <module>Voting</module>
+        <module>MutualTls</module>
     </modules>
 
     <properties>
